@@ -247,9 +247,10 @@ function opa_date($row) {
 }
 
 // Formats WeekdayName, MonthName day, year from date only
+// Returns input if it wasn't a valid date string
 function opa_date_from_string($date_string) {
     $date = DateTime::createFromFormat('Y-m-d',$date_string);
-    return $date->format('l, F j, Y');
+    return $date ? $date->format('l, F j, Y') : $date_string;
 }
 
 // Formats start(am/pm only if different from end) - end(am/pm)
