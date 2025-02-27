@@ -105,7 +105,7 @@ function opa_post($request) {
     // echo "cal = " . json_encode($request['cal']) . "\n";
     
     // Uncomment the following if you want to initialize the database and generate the encrypted code:
-    delete_opadata();
+    // Keep this commented! // delete_opadata();
 
     // --------------------------------------------------------------------------
     //    V a l i d a t e    c o m m o n    i n p u t

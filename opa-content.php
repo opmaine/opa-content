@@ -2,7 +2,7 @@
 /*
  * Plugin Name:       OPA Content
  * Description:       Provides database content to the Ocean Park Association website
- * Version:           1.0.7
+ * Version:           1.0.8
  * Author:            Jim Grace
  */
 
