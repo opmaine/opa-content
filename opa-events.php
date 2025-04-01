@@ -144,6 +144,16 @@ function month_name($month) {
 function define_calendar_styles() {
     ?>
     <style type="text/css">
+    .yearMonthTable {
+        margin-bottom: 7;
+    }
+    .dayTable {
+        background-color: #FFFFFF;
+        margin-left: auto;
+        margin-right: auto;
+        width:1%;
+        margin-bottom: 0;
+    }
     .yearTD {
         background-color: #FFFFFF;
         font-weight: normal;
@@ -164,8 +174,8 @@ function define_calendar_styles() {
         font-weight: normal;
         text-align: center;
         padding: 0px 0px;
-        vertical-align: middle;
-        height: 40px;
+        vertical-align: bottom;
+        height: 36px;
     }
     .monthSelected {
         background-color: #c2e7ff;
@@ -196,6 +206,10 @@ function define_calendar_styles() {
         margin: auto;
         width: 26px;
         height: 26px;
+    }
+    .dateTD {
+        padding-left: 0;
+        padding-right: 0;
     }
     .dateSelected {
         background-color: #c2e7ff;
@@ -271,7 +285,7 @@ function one_day_nav($year, $month, $day, $day_has_events, $selected_day) {
 // Display the navigation of days within the month
 function day_nav($year, $month, $days, $selected_day) {
     ?>
-    <table style="margin-left: auto; margin-right: auto;  width:1%; background-color:#FFFFFF;" class="op_span_calendar_navivation" align="center">
+    <table class="dayTable" align="center">
         <tr>
             <th class="dayTD">S</th>
             <th class="dayTD">M</th>
@@ -340,7 +354,7 @@ function date_nav($year, $target_date) {
     $selected_day = $months_and_days['selected_day'];
 
     echo '<span class="op_span_calendar_navivation">';
-    echo '<table>';
+    echo '<table class="yearMonthTable">';
 
     echo '<tr><td class="yearTD">';
     year_nav($year, $target_date);
@@ -516,7 +530,7 @@ function home_page_table_rows($rows, $selected_date, $previous_date) {
         $date = opa_date($row);
         if ($date != $previous_date) {
             $selected_class = ($date == $formatted_selected_date) ? ' dateSelected' : '';
-            echo "\n" . '<tr class="op_tr_date"><td class="op_td_date" colspan="4" style="text-align:center;font-style:italic">';
+            echo "\n" . '<tr class="op_tr_date"><td class="op_td_date dateTD" colspan="4" style="text-align:center;font-style:italic">';
             if ($date == $formatted_selected_date) {
                 echo '<span class="dateSelected"> &nbsp; &nbsp; ' . $date . ' &nbsp; &nbsp; </span>';
             } else {
