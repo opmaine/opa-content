@@ -79,8 +79,7 @@ function get_months($year) {
 
 // Returns an array of days within the month from the first to the last of the month.
 // Days having events have value true, and days not having events have value false.
-function get_days($year, $month)
-{
+function get_days($year, $month) {
     global $wpdb;
 
     $year_month = sprintf("%d-%02d", $year, $month);
@@ -142,31 +141,196 @@ function month_name($month) {
     return $date->format('M'); // 3-letter month
 }
 
-// Tells whether a date is a Saturday
-function is_saturday($year, $month, $day) {
-    $date = DateTime::createFromFormat('Y-m-d', $year . '-' . $month . '-' . $day);
-    return ($date->format('D') == 'Sat');
+function define_calendar_styles() {
+    ?>
+    <style type="text/css">
+    .yearTD {
+        background-color: #FFFFFF;
+        font-weight: normal;
+        text-align: center;
+        padding: 0px 0px;
+        vertical-align: bottom;
+        height: 40px;
+    }
+    .yearSelected {
+        background-color: #c2e7ff;
+        border-radius: 50px;
+        text-align: center;
+        width: 60px;
+        height: 26px;
+    }
+    .monthTD {
+        background-color: #FFFFFF;
+        font-weight: normal;
+        text-align: center;
+        padding: 0px 0px;
+        vertical-align: middle;
+        height: 40px;
+    }
+    .monthSelected {
+        background-color: #c2e7ff;
+        border-radius: 50px;
+        text-align: center;
+        width: 45px;
+        height: 26px;
+    }
+    .dayTD {
+        background-color: #FFFFFF;
+        font-weight: normal;
+        text-align: center;
+        padding: 0px 0px;
+    }
+    .dayInactive {
+        color: darkgrey;
+        padding: 2px 10px;
+    }
+    .dayClickable {
+        margin: auto;
+        width: 26px;
+        height: 26px;
+        padding: 2px 10px;
+    }
+    .daySelected {
+        background-color: #c2e7ff;
+        border-radius: 50%;
+        margin: auto;
+        width: 26px;
+        height: 26px;
+    }
+    .dateSelected {
+        background-color: #c2e7ff;
+        border-radius: 50px;
+        text-align: center;
+        height: 25px;
+        margin: auto;
+        display: table;
+    }
+    </style>
+    <?php
 }
 
 // Display the year navigation line
 function year_nav($selected_year, $target_date) {
     $years = get_years();
 
-    echo '<p class="op_p_year_navigtion" style="text-align:center;line-height:200%"> &nbsp;';
+    echo '<span "align="center" style="margin:auto; display:table;">&nbsp;';
+    // echo '<p class="op_p_year_navigtion" style="text-align:center;line-height:100%">&nbsp;';
     foreach ($years as $year) {
         if ($year == $selected_year) {
-            echo '<span class="op_span_selected_year" style="color:red">' . $year . '</span> &nbsp;';
+            echo '<span class="yearSelected"> &nbsp; ' . $year . ' &nbsp; </span>&nbsp;';
         }
         else {
-            $date = "'" . $year . substr($target_date, 5, 6) . "'"; // Request the same month/day in the other year.
-            // $date = "'" . $year . "-01-01'"; // Request January 1 of the other year.
-            echo '<a class="op_a_link_year" href="javascript:void(0)" alt="' . $year . '" onclick="update_opa_events(' . $date . ');return false;"><u>' . $year . '</u></a> &nbsp;';
+            $date = "'" . $year . substr($target_date, 4, 6) . "'"; // Request the same month/day in the other year.
+            // $date = "'" . $year . "-01-01'"; // Alternate implementation: Request January 1 of the other year.
+            echo '<a class="op_a_link_year" href="javascript:void(0)" alt="' . $year . '" onclick="update_opa_events(' . $date . ');return false;"><u>' . $year . '</u></a>&nbsp;';
         }
     }
-    echo '<br>';
+    echo '</span>';
 }
 
-// Display the year/month/date navigation system
+// Display the month navigation line
+function month_nav($year, $months, $selected_month) {
+    echo '<span "align="center" style="margin:auto; display:table;"> &nbsp;';
+    foreach ($months as $month => $month_has_events) {
+        $month_name = month_name($month);
+        if ($month_has_events) {
+            if ($month == $selected_month) {
+                echo '<span class="monthSelected"> &nbsp; ' . $month_name . ' &nbsp; </span>&nbsp;';
+            }
+            else {
+                $date = "'" . year_month_day($year, $month, 1) . "'"; // Request the first of the month.
+                echo '<a class="op_a_active_month" href="javascript:void(0)" alt="' . $month_name . '" onclick="update_opa_events(' . $date . ');return false;"><u>' . $month_name . '</u></a>&nbsp;';
+            }
+        }
+        else {
+            echo ' <span class="op_span_inactive_month">' . $month_name . '</span> ';
+//            echo '<div style="color: #9E9E9E"> ' . $month_name . ' </div>';
+        }
+    }
+    echo '</span>';
+}
+
+// Display a table cell for one navigation day in the month
+function one_day_nav($year, $month, $day, $day_has_events, $selected_day) {
+    echo '<td class="dayTD">';
+    if ($day_has_events) {
+        if ($day == $selected_day) {
+            echo '<div class="daySelected">' . $day . '</div>';
+        }
+        else {
+            $date = "'" . year_month_day($year, $month, $day) . "'";
+            echo "\n" . '<span class="dayClickable"><a href="javascript:void(0)" alt="' . $day . '" onclick="return update_opa_events(' .  $date . ');return false;"><u>' . $day . '</u></a></span> ';
+        }
+    }
+    else {
+        echo '<span class="dayInactive">' . $day . '</span> ';
+    }
+    echo '</td>';
+}
+
+// Display the navigation of days within the month
+function day_nav($year, $month, $days, $selected_day) {
+    ?>
+    <table style="margin-left: auto; margin-right: auto;  width:1%; background-color:#FFFFFF;" class="op_span_calendar_navivation" align="center">
+        <tr>
+            <th class="dayTD">S</th>
+            <th class="dayTD">M</th>
+            <th class="dayTD">T</th>
+            <th class="dayTD">W</th>
+            <th class="dayTD">T</th>
+            <th class="dayTD">F</th>
+            <th class="dayTD">S</th>
+        </tr>
+        <tr>
+    <?php
+
+    $previous_month = $month - 1;
+    $previous_month_year = $year;
+    if ($previous_month < 1) {
+        $previous_month = 12;
+        $previous_month_year = $previous_month_year - 1;
+    }
+
+    $next_month = $month + 1;
+    $next_month_year = $year;
+    if ($next_month > 12) {
+        $next_month = 1;
+        $next_month_year = $next_month_year + 1;
+    }
+
+    $previous_month_days = get_days($previous_month_year, $previous_month);
+    $next_month_days = get_days($next_month_year, $next_month);
+    // echo 'Previous month ' . $previous_month_year . '-' . $previous_month . ': '; print_r($previous_month_days); echo "<br>\n";
+    // echo 'Next month ' . $next_month_year . '-' . $next_month . ': '; print_r($next_month_days); echo "<br>\n";
+    $weekday = 0; // So we can track the last weekday after the loop
+    foreach ($days as $day => $day_has_events) {
+        // Weekday modulo 7 returns Sun=0, Mon=1, ..., Fri=5, Sat=6
+        $weekday = DateTime::createFromFormat('Y-m-d', $year . '-' . $month . '-' . $day)->format('N') % 7;
+
+        if ($day==1) { // First day of the month -- display last days of previous month, if any:
+            $last_month_count = count($previous_month_days);
+            for ($d = $last_month_count - $weekday; $d < $last_month_count; $d++) {
+                one_day_nav($previous_month_year, $previous_month, $d, $previous_month_days[$d], false);
+            }
+        }
+        elseif ($weekday==0) {
+            echo "</tr>\n<tr>";
+        }
+
+        one_day_nav($year, $month, $day, $day_has_events, $selected_day);
+
+        // echo ' day ' . $day . ' weekday ' . $weekday . "<br>\n";
+    }
+
+    // Display first days of next month, if any:
+    for ($d = 1; $d < 7 - $weekday; $d++) {
+        one_day_nav($next_month_year, $next_month, $d, $next_month_days[$d], false);
+    }
+
+    echo '</tr></table>';
+}
+
+// Display the entire year/month/date navigation system
 function date_nav($year, $target_date) {
     // echo 'date_nav ' . $year . ' ' . $target_date;
     $months_and_days = select_months_and_days($year, $target_date);
@@ -176,45 +340,20 @@ function date_nav($year, $target_date) {
     $selected_day = $months_and_days['selected_day'];
 
     echo '<span class="op_span_calendar_navivation">';
+    echo '<table>';
 
+    echo '<tr><td class="yearTD">';
     year_nav($year, $target_date);
+    echo '</td></tr>';
 
-    foreach ($months as $month => $month_has_events) {
-        $month_name = month_name($month);
-        if ($month_has_events) {
-            if ($month == $selected_month) {
-                echo '<span class="op_span_selected_month" style="color:red">' . $month_name . '</span> ';
-//                echo '<span style="color:red;font-weight:bold">' . $month_name . '</span> ';
-            }
-            else {
-                $date = "'" . year_month_day($year, $month, 1) . "'"; // Request the first of the month.
-                echo "\n" . '<a class="op_a_active_month" href="javascript:void(0)" alt="' . $month_name . '" onclick="update_opa_events(' . $date . ');return false;"><u>' . $month_name . '</u></a> ';
-            }
-        }
-        else {
-            echo '<span class="op_span_inactive_month">' . $month_name . '</span>';
-//            echo '<div style="color: #9E9E9E"> ' . $month_name . ' </div>';
-        }
-    }
-    echo '<br>';
+    echo '<tr><td class="monthTD">';
+    month_nav($year, $months, $selected_month);
+    echo '</td></tr>';
 
-    foreach ($days as $day => $day_has_events) {
-        if ($day_has_events) {
-            if ($day == $selected_day) {
-                echo '<span class="op_span_selected_day" style="color:red">' . $day . '</span> ';
-//                echo '<span style="color:red;font-weight:bold">' . $day . '</span> ';
-            }
-            else {
-                $date = "'" . year_month_day($year, $selected_month, $day) . "'";
-                echo "\n" . '<a class="op_span_active_day" href="javascript:void(0)" alt="' . $day . '" onclick="return update_opa_events(' .  $date . ');return false;"><u>' . $day . '</u></a> ';
-            }
-        }
-        else {
-            echo '<span class="op_span_inactive_day">' . $day . '</span> ';
-        }
-        if (is_saturday($year, $selected_month, $day)) {
-            echo " &nbsp;&nbsp; ";
-        }
+    echo '</table>';
+
+    if ($days) {
+        day_nav($year, $selected_month, $days, $selected_day);
     }
 
     echo '</span>';
@@ -225,7 +364,7 @@ function date_nav($year, $target_date) {
 
 function pillar_legend() {
     global $PLUGIN_IMG_URL;
-    echo "<br>\n <span class='opa_span_pillar_legend'>";
+    echo "<br>\n" . '<span align="center" style="margin:auto; display:table;" class="opa_span_pillar_legend">';
     // Note that the spacing before and after the recreational icon is not like the others.
     // This is because the recreational icon is skinnier than the others. The difference in
     // actual spacing makes it look to the eye like consistent spacing before and after the icon.
@@ -233,7 +372,7 @@ function pillar_legend() {
     echo '<span style="white-space:nowrap"><img class="opa_img_pillar_key" width="20" height="20" src="'. $PLUGIN_IMG_URL . 'cultural_icon.svg" alt="Spiritual icon">&nbsp;&nbsp;Cultural</span> &nbsp; &nbsp; &nbsp; ' . "\n";
     echo '<span style="white-space:nowrap"><img class="opa_img_pillar_key" width="20" height="20" src="'. $PLUGIN_IMG_URL . 'educational_icon.svg" alt="Spiritual icon">&nbsp;&nbsp;Educational</span> &nbsp; &nbsp; ' . "\n";
     echo '<span style="white-space:nowrap"><img class="opa_img_pillar_key" width="20" height="20" src="'. $PLUGIN_IMG_URL . 'recreational_icon.svg" alt="Spiritual icon">&nbsp;Recreational</span>' . "\n";
-    echo '</span>';
+    echo "</span><br>\n";
 }
 
 // ------------------------------------------------------------------------------
@@ -376,8 +515,14 @@ function home_page_table_rows($rows, $selected_date, $previous_date) {
 
         $date = opa_date($row);
         if ($date != $previous_date) {
-            $text_color = ($date == $formatted_selected_date) ? ';color:red' : '';
-            echo "\n" . '<tr class="op_tr_date"><td class="op_td_date" colspan="4" style="text-align:center;font-style:italic' . $text_color . '">' . $date . "</td></tr>\n";
+            $selected_class = ($date == $formatted_selected_date) ? ' dateSelected' : '';
+            echo "\n" . '<tr class="op_tr_date"><td class="op_td_date" colspan="4" style="text-align:center;font-style:italic">';
+            if ($date == $formatted_selected_date) {
+                echo '<span class="dateSelected"> &nbsp; &nbsp; ' . $date . ' &nbsp; &nbsp; </span>';
+            } else {
+                echo $date;
+            }
+            echo "</td></tr>\n";
             $previous_date = $date;
         }
 
@@ -396,7 +541,7 @@ function home_page_table_rows($rows, $selected_date, $previous_date) {
             '</td><td class="op_td_time"' . $style . '>' . opa_time($row) . '</td></tr></table></td><td class="op_td_address"' . $style . '>' . htmlspecialchars($event->location) . "</td></tr>\n";
 
         // Detail row (may be displayed or not)
-        echo '<tr id=' . $tr_id . ' class="op_tr_detail" style="display:none"><td class="op_td_detail"' . $style . '>' . htmlspecialchars($event->calenderDescription) . '</td><td class="op_td_address"' . $style . '>' . htmlspecialchars($address) . "</td></tr>\n";
+        echo '<tr id=' . $tr_id . ' class="op_tr_detail" style="display:none"><td class="op_td_detail">' . htmlspecialchars($event->calenderDescription) . '</td><td class="op_td_address">' . htmlspecialchars($address) . "</td></tr>\n";
     }
     return $last_row;
 }
@@ -415,18 +560,12 @@ function home_page_events($target_date) {
     $rows = get_rows($selected_date);
     $previous_date = '';
 
-    ?>
-    <style>
-        tr.event { width:100%; padding: 0; border: none; }
-        .tb td { width:100%; border-collapse: collapse }
-        tr.desc { width:100%; padding: 0; display: none; }
-        .tb td { width:100%; border-collapse: collapse }
-    </style>
-    <?php
-
     echo "<table class='op_table_events' id='home_page_event_table'>\n";
     $last_row = home_page_table_rows($rows, $selected_date, $previous_date);
     echo '</table>';
+    if (!$last_row) {
+        return null;
+    }
 
     ?>
     <p id="opa_p_more">
@@ -592,6 +731,7 @@ class OPA_Events extends WP_Widget {
         </script>
         <?php
 
+        define_calendar_styles();
         echo '<div class="op_div_events" id="home_page_events_table">';
         home_page_events(date('Y-m-d'));
         echo '</div>';
