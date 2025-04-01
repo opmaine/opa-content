@@ -323,7 +323,7 @@ function day_nav($year, $month, $days, $selected_day) {
 
         if ($day==1) { // First day of the month -- display last days of previous month, if any:
             $last_month_count = count($previous_month_days);
-            for ($d = $last_month_count - $weekday; $d < $last_month_count; $d++) {
+            for ($d = $last_month_count - $weekday + 1; $d <= $last_month_count; $d++) {
                 one_day_nav($previous_month_year, $previous_month, $d, $previous_month_days[$d], false);
             }
         }
