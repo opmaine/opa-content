@@ -30,7 +30,7 @@ $PROGRAM_IMAGE_HEIGHT = 200;
 function get_max_eventid() {
     global $wpdb;
 
-    $rows = $wpdb->get_results('select max(eventid) as max_eventid from opa_event');
+    $rows = $wpdb->get_results('select coalesce(max(eventid),0) as max_eventid from opa_event');
 
     return reset($rows)->max_eventid;
 }
